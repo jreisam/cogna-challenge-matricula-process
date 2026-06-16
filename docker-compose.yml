@@ -52,6 +52,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # PLAINTEXT  → acessível pelo host (localhost:9092)
+      # PLAINTEXT_INTERNAL → acessível pelos demais containers (kafka:29092)
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
@@ -78,6 +80,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # -------------------------------------------------------
+  # Aplicação — matricula-process
+  # -------------------------------------------------------
+  matricula-process:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matricula-process
+    ports:
+      - "8080:8080"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/matriculas
+      MONGODB_DATABASE: matriculas
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_CONSUMER_GROUP_ID: matricula-process-group
+      KAFKA_TOPIC_TURMA_ATUALIZADA: turma-atualizada
+      KAFKA_TOPIC_MATRICULA_ATUALIZADA: matricula-atualizada
+      CICLO_API_URL: http://mock-ciclo-api:8080
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mock-ciclo-api:
+        condition: service_healthy
+    restart: on-failure
 
 volumes:
   mongodb_data:
