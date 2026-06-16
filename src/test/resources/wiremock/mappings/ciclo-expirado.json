@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/ciclos/20252"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "id": 20252,
+      "ativo": true,
+      "dataInicioCaptura": "2025-01-15",
+      "dataFimCaptura": "2025-07-01"
+    }
+  }
+}
