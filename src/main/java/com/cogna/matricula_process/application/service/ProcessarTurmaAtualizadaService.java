@@ -19,25 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import com.cogna.matricula_process.application.port.in.ProcessarTurmaAtualizadaUseCase;
-import com.cogna.matricula_process.application.port.out.CicloClientPort;
-import com.cogna.matricula_process.application.port.out.MatriculaEventPublisherPort;
-import com.cogna.matricula_process.application.port.out.MatriculaRepositoryPort;
-import com.cogna.matricula_process.domain.model.Matricula;
-import com.cogna.matricula_process.domain.model.StatusMatricula;
-import com.cogna.matricula_process.infrastructure.adapter.in.kafka.dto.TurmaAtualizadaEvent;
-import com.cogna.matricula_process.infrastructure.adapter.out.kafka.dto.MatriculaAtualizadaEvent;
-import com.cogna.matricula_process.infrastructure.adapter.out.rest.dto.CicloResponseDTO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -105,7 +86,7 @@ public class ProcessarTurmaAtualizadaService implements ProcessarTurmaAtualizada
             // Jornada 4 — Persiste a matrícula atualizada
             Matricula matriculaAtualizada = matriculaRepositoryPort.salvar(matricula);
 
-            // Jornada 5 — Publica evento matricula-atualizada
+            // Jornada 5 — Publica evento `matricula-atualizada`
             MatriculaAtualizadaEvent eventoSaida = MatriculaAtualizadaEvent.builder()
                     .matriculaId(matriculaAtualizada.getId())
                     .alunoId(matriculaAtualizada.getAlunoId())
@@ -125,7 +106,7 @@ public class ProcessarTurmaAtualizadaService implements ProcessarTurmaAtualizada
     }
 
     /**
-     * Regra 1: Ciclo é vigente se:
+     * Ciclo é vigente se:
      * - ativo == true
      * - dataInicioCaptura <= hoje < dataFimCaptura
      */

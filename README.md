@@ -104,6 +104,7 @@ Este comando irá:
 ## 🧪 Executando os testes
 
 Os testes **não dependem do Docker Compose**. Eles usam **Testcontainers** para subir MongoDB e Kafka automaticamente durante a execução.
+Todas as portas de saída (`CicloClientPort`, `MatriculaRepositoryPort`, `MatriculaEventPublisherPort`) são mockadas, isolando as regras de negócio do `ProcessarTurmaAtualizadaService`.
 
 **Pré-requisito:** Java 21+ e Docker em execução.
 
@@ -118,6 +119,55 @@ Os testes **não dependem do Docker Compose**. Eles usam **Testcontainers** para
 |---|---|---|
 | **Unidade** | JUnit 5 + Mockito | Regras de negócio do `Service` isoladas, com todas as portas mockadas |
 | **Integração** | Testcontainers + Spring Boot Test | Jornadas completas com MongoDB e Kafka em containers Docker |
+
+
+---
+
+### 📋 Cenários cobertos
+
+#### `ProcessarTurmaAtualizadaServiceCicloNaoEncontradoTest`
+> Ciclo retorna `Optional.empty()` (ex: API respondeu 404)
+
+| # | Cenário | Resultado esperado |
+|---|---|---|
+| 1 | Ciclo não encontrado para o `cicloId` do evento | Evento descartado — nenhuma matrícula buscada, salva ou publicada |
+| 2 | Qualquer `cicloId` inexistente (parametrizado) | Evento descartado — nenhuma interação com repositório ou publisher |
+
+---
+
+#### `ProcessarTurmaAtualizadaServiceCicloEncontradoNaoVigenteTest`
+> Ciclo encontrado, mas não satisfaz as condições de vigência (`ativo == true` e `dataInicioCaptura` ≤ hoje < `dataFimCaptura`)
+
+| # | Cenário | Resultado esperado |
+|---|---|---|
+| 1 | `ativo = false`, janela de captura válida | Evento descartado |
+| 2 | `ativo = true`, `hoje < dataInicioCaptura` (captura ainda não começou) | Evento descartado |
+| 3 | `ativo = true`, `hoje >= dataFimCaptura` (limite superior exclusivo) | Evento descartado |
+| 4 | `ativo = false` e fora da janela de captura | Evento descartado |
+
+---
+
+#### `ProcessarTurmaAtualizadaServiceCicloVigenteDiasIguaisTest`
+> Ciclo vigente, mas `diasDaSemana` da matrícula já são idênticos aos do evento
+
+| # | Cenário | Resultado esperado |
+|---|---|---|
+| 1 | Uma matrícula com dias iguais na mesma ordem | Nada é salvo ou publicado |
+| 2 | Uma matrícula com dias iguais em ordem diferente | Nada é salvo ou publicado (comparação ignora ordem) |
+| 3 | Múltiplas matrículas, todas com dias iguais ao evento | Nenhuma é salva ou publicada |
+| 4 | Nenhuma matrícula `ATIVA` encontrada para o `businessKey` | Nenhuma ação realizada |
+
+---
+
+#### `ProcessarTurmaAtualizadaServiceCicloVigenteDiasDiferentesTest`
+> Ciclo vigente e `diasDaSemana` da matrícula diferem dos dias do evento → deve persistir e publicar
+
+| # | Cenário | Resultado esperado |
+|---|---|---|
+| 1 | Uma matrícula com dias diferentes | Matrícula salva + evento `matricula-atualizada` publicado com dados antes e depois |
+| 2 | Duas matrículas: uma com dias iguais, outra com dias diferentes | Apenas a diferente é salva e publica evento |
+| 3 | Múltiplas matrículas, todas com dias diferentes | `salvar` e `publicar` chamados N vezes (uma vez por matrícula) |
+| 4 | Validação dos campos do evento publicado (`diasDaSemanaAnterior` preservado) | `diasDaSemanaAnterior` contém os dias originais da matrícula; `diasDaSemanaNovo` contém os novos dias do evento |
 
 
 

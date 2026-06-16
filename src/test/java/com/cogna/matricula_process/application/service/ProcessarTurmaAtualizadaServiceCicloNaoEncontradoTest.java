@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
- * J1 — Ciclo não encontrado (404).
+ * C1 — Ciclo não encontrado (404).
  *
  * Dado que o ciclo consultado retorna Optional.empty() (ex: API retornou 404),
  * o evento deve ser descartado silenciosamente:
@@ -30,8 +30,8 @@ import static org.mockito.Mockito.*;
  *  - Nenhum evento deve ser publicado
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("J1 — Ciclo não encontrado: evento deve ser descartado")
-class ProcessarTurmaAtualizadaServiceJ1Test {
+@DisplayName("C1 — Ciclo não encontrado: evento deve ser descartado")
+class ProcessarTurmaAtualizadaServiceCicloNaoEncontradoTest {
 
     @Mock
     private CicloClientPort cicloClientPort;
@@ -62,7 +62,7 @@ class ProcessarTurmaAtualizadaServiceJ1Test {
 
     @Test
     @DisplayName("Deve descartar o evento quando o ciclo não for encontrado (404)")
-    void devDescartarEventoQuandoCicloNaoEncontrado() {
+    void deveDescartarEventoQuandoCicloNaoEncontrado() {
         // Arrange — API retorna vazio (404)
         when(cicloClientPort.buscarPorId(99L)).thenReturn(Optional.empty());
 
@@ -82,7 +82,7 @@ class ProcessarTurmaAtualizadaServiceJ1Test {
 
     @Test
     @DisplayName("Deve descartar o evento independentemente do businessKey e cicloId recebidos")
-    void devDescartarEventoParaQualquerCicloInexistente() {
+    void deveDescartarEventoParaQualquerCicloInexistente() {
         // Arrange — qualquer cicloId consultado retorna vazio
         when(cicloClientPort.buscarPorId(anyLong())).thenReturn(Optional.empty());
 
