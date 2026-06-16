@@ -1,0 +1,20 @@
+package com.cogna.matricula_process.infrastructure.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+
+@Configuration
+public class RestClientConfig {
+
+    @Value("${ciclo.api.url}")
+    private String cicloApiUrl;
+
+    @Bean
+    public RestClient cicloRestClient(RestClient.Builder builder) {
+        return builder
+                .baseUrl(cicloApiUrl)
+                .build();
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/ciclos/99999"
+  },
+  "response": {
+    "status": 404
+  }
+}
