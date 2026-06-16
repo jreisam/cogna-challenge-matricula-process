@@ -1,5 +1,4 @@
 package com.cogna.matricula_process.application.port.out;
-package com.cogna.matricula_process.application.port.out;
 
 import com.cogna.matricula_process.domain.model.Matricula;
 import com.cogna.matricula_process.domain.model.StatusMatricula;
@@ -25,14 +24,4 @@ public interface MatriculaRepositoryPort {
      */
     Matricula salvar(Matricula matricula);
 }
-import com.cogna.matricula_process.domain.model.Matricula;
-import com.cogna.matricula_process.domain.model.StatusMatricula;
 
-import java.util.List;
-
-public interface MatriculaRepositoryPort {
-
-    List<Matricula> buscarPorBusinessKeyEStatus(String businessKey, StatusMatricula status);
-
-    Matricula salvar(Matricula matricula);
-}
