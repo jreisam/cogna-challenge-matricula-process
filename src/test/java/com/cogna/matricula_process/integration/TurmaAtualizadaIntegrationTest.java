@@ -90,6 +90,7 @@ class TurmaAtualizadaIntegrationTest extends BaseIntegrationTest {
 
         listenerContainer = new KafkaMessageListenerContainer<>(consumerFactory, containerProps);
         listenerContainer.start();
+        // Aguarda a atribuição da partição com timeout generoso (tópico pode estar a ser criado)
         ContainerTestUtils.waitForAssignment(listenerContainer, 1);
     }
 

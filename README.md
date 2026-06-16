@@ -170,4 +170,43 @@ Todas as portas de saída (`CicloClientPort`, `MatriculaRepositoryPort`, `Matric
 | 4 | Validação dos campos do evento publicado (`diasDaSemanaAnterior` preservado) | `diasDaSemanaAnterior` contém os dias originais da matrícula; `diasDaSemanaNovo` contém os novos dias do evento |
 
 
+## 🪵 Logs Estruturados (JSON + MDC)
+
+
+Em ambientes de produção, todos os logs são emitidos em **JSON** — uma linha por evento —, prontos para ingestão em ferramentas como **ELK Stack (Elasticsearch + Kibana)**, **Grafana Loki** ou **AWS CloudWatch Logs Insights**.
+
+A rastreabilidade entre logs é garantida pelo **MDC (Mapped Diagnostic Context)** do SLF4J: no início do consumo de cada mensagem Kafka, a aplicação popula automaticamente um conjunto de campos contextuais que aparecem em **todas** as linhas de log geradas ao longo do mesmo processamento — sem nenhuma alteração nas assinaturas dos métodos internos.
+
+---
+
+### Campos MDC populados por processamento
+
+| Campo | Quando é populado | Descrição |
+|---|---|---|
+| `correlationId` | Entrada do consumer (`TurmaAtualizadaConsumer`) | UUID único gerado por mensagem — correlaciona todos os logs de um mesmo evento de ponta a ponta |
+| `businessKey` | Entrada do consumer | Chave de negócio da turma recebida no evento |
+| `cicloId` | Entrada do consumer | ID do ciclo recebido no evento |
+| `matriculaId` | Loop de processamento no `Service` | ID da matrícula sendo processada naquele momento |
+| `alunoId` | Loop de processamento no `Service` | ID do aluno da matrícula em processamento |
+
+> O MDC é **sempre limpo** ao final do processamento — inclusive em caso de exceção —, graças ao padrão `try-with-resources` implementado em `MdcContext`.
+
+---
+
+### Exemplo de saída JSON (produção)
+
+```json
+{
+  "timestamp": "2026-06-16T10:23:45.100Z",
+  "level": "INFO",
+  "message": "Evento recebido do tópico turma-atualizada",
+  "logger": "c.c.m.i.a.i.kafka.TurmaAtualizadaConsumer",
+  "app": "matricula-process",
+  "correlationId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "businessKey": "TURMA-2024-001",
+  "cicloId": "42"
+}
+```
+
+---
 

@@ -21,8 +21,12 @@ public class TurmaAtualizadaConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumir(@Payload TurmaAtualizadaEvent event) {
-        log.info("Evento recebido do tópico turma-atualizada | businessKey={} | cicloId={}",
-                event.getBusinessKey(), event.getCicloId());
-        processarTurmaAtualizadaUseCase.processar(event);
+        MdcContext.popular(event.getBusinessKey(), event.getCicloId());
+        try {
+            log.info("Evento recebido do tópico turma-atualizada");
+            processarTurmaAtualizadaUseCase.processar(event);
+        } finally {
+            MdcContext.limpar();
+        }
     }
 }
