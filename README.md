@@ -108,8 +108,8 @@ Todas as portas de saída (`CicloClientPort`, `MatriculaRepositoryPort`, `Matric
 
 **Pré-requisito:** Java 21+ e Docker em execução.
 
-# Todos os testes (unitários + integração com Testcontainers)
-`./gradlew test`
+# Todos os testes unitários
+`./gradlew test --info`
 
 ---
 
