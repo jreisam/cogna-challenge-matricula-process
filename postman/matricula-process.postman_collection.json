@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "matricula-process",
+    "description": "Coleção para testar e validar os cenários do microsserviço matricula-process via REST, sem depender de eventos Kafka.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "businessKey",
+      "value": "TURMA-2024-001",
+      "type": "string"
+    },
+    {
+      "key": "cicloIdVigente",
+      "value": "20261",
+      "type": "string"
+    },
+    {
+      "key": "cicloIdInativo",
+      "value": "20262",
+      "type": "string"
+    },
+    {
+      "key": "cicloIdInexistente",
+      "value": "99999",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "📋 Consulta de Matrículas",
+      "item": [
+        {
+          "name": "Buscar matrículas ATIVAS por businessKey",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/test/matriculas?businessKey={{businessKey}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "matriculas"],
+              "query": [
+                {
+                  "key": "businessKey",
+                  "value": "{{businessKey}}"
+                }
+              ]
+            },
+            "description": "Consulta todas as matrículas com status ATIVA para o businessKey informado. Use antes e depois de processar para validar as alterações no MongoDB."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚫 Cenário 1 — Ciclo não encontrado",
+      "item": [
+        {
+          "name": "Processar turma — cicloId inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdInexistente}},\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Envia um evento com cicloId que não existe na API de Ciclos (WireMock retorna 404).\n\nResultado esperado: evento descartado — nenhuma matrícula buscada, salva ou publicada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⛔ Cenário 2 — Ciclo encontrado, porém não vigente",
+      "item": [
+        {
+          "name": "Processar turma — ciclo inativo (ativo: false)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdInativo}},\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Envia um evento com o cicloId 20262, que está mapeado no WireMock com ativo: false.\n\nResultado esperado: ciclo encontrado mas descartado por não estar vigente — nenhuma matrícula alterada."
+          },
+          "response": []
+        },
+        {
+          "name": "Processar turma — ciclo fora da janela de captura (futuro)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": 20263,\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Envia um evento com cicloId cujo dataInicioCaptura ainda não chegou (captura no futuro).\n\nResultado esperado: evento descartado — ciclo não está dentro da janela de captura."
+          },
+          "response": []
+        },
+        {
+          "name": "Processar turma — ciclo com captura encerrada (passado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": 20264,\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Envia um evento com cicloId cujo dataFimCaptura já passou.\n\nResultado esperado: evento descartado — ciclo com captura encerrada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "✅ Cenário 3 — Ciclo vigente, dias IGUAIS (no-op)",
+      "item": [
+        {
+          "name": "Processar turma — dias iguais (mesma ordem)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Ciclo vigente, porém os diasDaSemana enviados são idênticos aos que já estão na matrícula.\n\nResultado esperado: nenhuma matrícula salva, nenhum evento Kafka publicado."
+          },
+          "response": []
+        },
+        {
+          "name": "Processar turma — dias iguais (ordem diferente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"SEXTA\", \"SEGUNDA\", \"QUARTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Ciclo vigente. Os diasDaSemana são os mesmos mas em ordem diferente — a comparação deve ignorar a ordem.\n\nResultado esperado: nenhuma matrícula salva, nenhum evento Kafka publicado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔄 Cenário 4 — Ciclo vigente, dias DIFERENTES (atualização)",
+      "item": [
+        {
+          "name": "Processar turma — dias diferentes (deve atualizar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Status é PROCESSADO', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('PROCESSADO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"TERCA\", \"QUINTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Ciclo vigente e diasDaSemana diferentes dos que estão na matrícula.\n\nResultado esperado: matrícula atualizada no MongoDB + evento matricula-atualizada publicado no Kafka com diasDaSemanaAnterior e diasDaSemanaNovo preenchidos."
+          },
+          "response": []
+        },
+        {
+          "name": "Processar turma — restaurar dias originais",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"SEGUNDA\", \"QUARTA\", \"SEXTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Restaura os dias da semana para o valor original após o cenário de atualização.\n\nResultado esperado: matrícula atualizada novamente, evento publicado com os dias trocados."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔁 Fluxo completo de validação",
+      "item": [
+        {
+          "name": "1. Consultar estado inicial das matrículas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/test/matriculas?businessKey={{businessKey}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "matriculas"],
+              "query": [
+                {
+                  "key": "businessKey",
+                  "value": "{{businessKey}}"
+                }
+              ]
+            },
+            "description": "Passo 1/4 — Consulta o estado atual das matrículas antes de qualquer processamento."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Processar turma com dias DIFERENTES",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"TERCA\", \"QUINTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Passo 2/4 — Dispara o processamento com dias diferentes dos que estão na matrícula."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Confirmar atualização no MongoDB",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/test/matriculas?businessKey={{businessKey}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "matriculas"],
+              "query": [
+                {
+                  "key": "businessKey",
+                  "value": "{{businessKey}}"
+                }
+              ]
+            },
+            "description": "Passo 3/4 — Verifica que os diasDaSemana foram atualizados para [TERCA, QUINTA] no MongoDB."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Reprocessar com dias IGUAIS (deve ser no-op)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"cicloId\": {{cicloIdVigente}},\n  \"diasDaSemana\": [\"TERCA\", \"QUINTA\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/turma-atualizada/processar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "turma-atualizada", "processar"]
+            },
+            "description": "Passo 4/4 — Reprocessa com os mesmos dias já salvos. Nenhuma atualização deve ocorrer (no-op)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "❤️ Health Check",
+      "item": [
+        {
+          "name": "Actuator — Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Verifica se a aplicação está saudável via Spring Actuator."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

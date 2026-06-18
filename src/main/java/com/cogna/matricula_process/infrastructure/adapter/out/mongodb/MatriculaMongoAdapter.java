@@ -42,6 +42,26 @@ public class MatriculaMongoAdapter implements MatriculaRepositoryPort {
         return toModel(salvo);
     }
 
+    /**
+     * Busca todas as matrículas ativas por businessKey.
+     *
+     * @param businessKey chave de negócio da turma
+     * @return lista de matrículas ativas encontradas
+     */
+    @Override
+    public List<Matricula> buscarAtivasPorBusinessKey(String businessKey) {
+        log.info("Buscando matrículas ativas no MongoDB | businessKey={}", businessKey);
+
+        List<Matricula> matriculasAtivas = repository
+                .findAllByBusinessKeyAndStatus(businessKey, StatusMatricula.ATIVA.name())
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        log.info("{} matrícula(s) ativas encontrada(s) no MongoDB para businessKey={}", matriculasAtivas.size(), businessKey);
+        return matriculasAtivas;
+    }
+
     // -------------------------------------------------------------------------
     // Mappers
     // -------------------------------------------------------------------------

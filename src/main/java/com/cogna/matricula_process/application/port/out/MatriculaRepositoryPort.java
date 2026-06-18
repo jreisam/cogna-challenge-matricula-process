@@ -23,5 +23,13 @@ public interface MatriculaRepositoryPort {
      * @return entidade persistida com id preenchido
      */
     Matricula salvar(Matricula matricula);
+
+    /**
+     * Busca todas as matrículas ativas por businessKey.
+     *
+     * @param businessKey chave de negócio da turma
+     * @return lista de matrículas ativas encontradas
+     */
+    List<Matricula> buscarAtivasPorBusinessKey(String businessKey);
 }
 
