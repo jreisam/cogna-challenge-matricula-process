@@ -33,7 +33,8 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:kafka'
 	testImplementation 'org.testcontainers:mongodb'
-	testImplementation 'org.wiremock.integrations:wiremock-testcontainers:1.0-alpha-14'
+	testImplementation 'org.wiremock.integrations.testcontainers:wiremock-testcontainers-module:1.0-alpha-15'
+
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
