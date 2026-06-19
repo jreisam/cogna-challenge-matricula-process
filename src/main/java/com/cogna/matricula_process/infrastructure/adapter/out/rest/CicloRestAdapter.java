@@ -5,6 +5,7 @@ import com.cogna.matricula_process.infrastructure.adapter.out.rest.dto.CicloResp
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -20,23 +21,20 @@ public class CicloRestAdapter implements CicloClientPort {
     @Override
     public Optional<CicloResponseDTO> buscarPorId(Long cicloId) {
         log.info("Consultando ciclo id={} na API externa", cicloId);
+        try {
+            String url = "/api/ciclos/" + cicloId;
+            var response = cicloRestClient.get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve().toEntity(CicloResponseDTO.class);
 
-        return cicloRestClient.get()
-                .uri("/api/ciclos/{cicloId}", cicloId)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    log.warn("Ciclo id={} não encontrado na API externa (status {})", cicloId, response.getStatusCode());
-                })
-                .toEntity(CicloResponseDTO.class)
-                .getBody() != null
-                ? Optional.ofNullable(
-                        cicloRestClient.get()
-                                .uri("/api/ciclos/{cicloId}", cicloId)
-                                .retrieve()
-                                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {})
-                                .toEntity(CicloResponseDTO.class)
-                                .getBody()
-                  )
-                : Optional.empty();
+            if (response == null || !HttpStatusCode.valueOf(response. getStatusCodeValue()).is2xxSuccessful()) {
+                log.error("Erro ao consultar ciclo id={} | StatusCode={}", cicloId, response != null ? response.getStatusCodeValue() : "null");
+                return Optional.empty();
+            }
+
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception ex) {
+            log.error("Exceção ao consultar ciclo id={}: {}", cicloId, ex.getMessage(), ex);
+            return Optional.empty();
+        }
+
     }
 }

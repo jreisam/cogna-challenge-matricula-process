@@ -2,6 +2,7 @@ package com.cogna.matricula_process.infrastructure.adapter.in.rest;
 
 import com.cogna.matricula_process.application.port.in.ProcessarTurmaAtualizadaUseCase;
 import com.cogna.matricula_process.infrastructure.adapter.in.kafka.dto.TurmaAtualizadaEvent;
+import com.cogna.matricula_process.infrastructure.adapter.in.kafka.dto.TurmaEventDTO;
 import com.cogna.matricula_process.infrastructure.adapter.in.rest.dto.ProcessamentoResponse;
 import com.cogna.matricula_process.infrastructure.adapter.in.rest.dto.TurmaAtualizadaRequest;
 import jakarta.validation.Valid;
@@ -41,9 +42,18 @@ public class TurmaAtualizadaRestController {
         log.info("Recebida requisição REST para processar turma atualizada | businessKey={} | cicloId={}",
                 request.getBusinessKey(), request.getCicloId());
 
-        TurmaAtualizadaEvent event = TurmaAtualizadaEvent.builder()
+                        TurmaEventDTO turmaEventDTO = new TurmaEventDTO(
+                null,
+                request.getDiasDaSemana(),
+                request.getHorarioInicio(),
+                request.getHorarioFim(),
+                null
+                        );
+
+                        TurmaAtualizadaEvent event = TurmaAtualizadaEvent.builder()
                 .businessKey(request.getBusinessKey())
                 .cicloId(request.getCicloId())
+                .turma(turmaEventDTO)
                 .build();
 
         processarTurmaAtualizadaUseCase.processar(event);

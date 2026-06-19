@@ -1,0 +1,333 @@
+{
+  "info": {
+    "name": "mock-ciclo-api (WireMock)",
+    "description": "Coleção para testar diretamente os endpoints expostos pelo WireMock (mock-ciclo-api) na porta 8081.\n\nCobre todos os mapeamentos configurados em mock-ciclo-api/mappings/:\n- ciclo-vigente.json      → id 20261 (ativo, dentro da janela de captura)\n- ciclo-inativo.json      → id 20262 (ativo: false)\n- ciclo-expirado.json     → id 20252 (ativo: true, dataFimCaptura no passado)\n- ciclo-nao-encontrado.json → id 99999 (HTTP 404)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "mockBaseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "✅ Ciclo vigente (id: 20261)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Content-Type é application/json', function () {",
+              "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+              "});",
+              "pm.test('ativo é true', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ativo).to.be.true;",
+              "});",
+              "pm.test('id correto', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.id).to.eql(20261);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{mockBaseUrl}}/api/ciclos/20261",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["api", "ciclos", "20261"]
+        },
+        "description": "Retorna o ciclo 20261 com ativo: true e dataFimCaptura: 2026-07-01.\n\nEste é o cicloId vigente usado nos cenários de atualização de matrícula."
+      },
+      "response": [
+        {
+          "name": "200 OK — Ciclo vigente",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mockBaseUrl}}/api/ciclos/20261",
+              "host": ["{{mockBaseUrl}}"],
+              "path": ["api", "ciclos", "20261"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": 20261,\n  \"ativo\": true,\n  \"dataInicioCaptura\": \"2026-01-15\",\n  \"dataFimCaptura\": \"2026-07-01\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "⛔ Ciclo inativo (id: 20262)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('ativo é false', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ativo).to.be.false;",
+              "});",
+              "pm.test('id correto', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.id).to.eql(20262);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{mockBaseUrl}}/api/ciclos/20262",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["api", "ciclos", "20262"]
+        },
+        "description": "Retorna o ciclo 20262 com ativo: false.\n\nO serviço deve descartar o evento ao receber este cicloId, pois o ciclo não está ativo."
+      },
+      "response": [
+        {
+          "name": "200 OK — Ciclo inativo",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mockBaseUrl}}/api/ciclos/20262",
+              "host": ["{{mockBaseUrl}}"],
+              "path": ["api", "ciclos", "20262"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": 20262,\n  \"ativo\": false,\n  \"dataInicioCaptura\": \"2026-01-15\",\n  \"dataFimCaptura\": \"2026-07-01\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "⏰ Ciclo expirado (id: 20252)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('ativo é true mas dataFimCaptura no passado', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ativo).to.be.true;",
+              "    const dataFim = new Date(json.dataFimCaptura);",
+              "    pm.expect(dataFim < new Date()).to.be.true;",
+              "});",
+              "pm.test('id correto', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.id).to.eql(20252);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{mockBaseUrl}}/api/ciclos/20252",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["api", "ciclos", "20252"]
+        },
+        "description": "Retorna o ciclo 20252 com ativo: true, mas dataFimCaptura: 2025-07-01 (já expirada).\n\nO serviço deve descartar o evento pois hoje >= dataFimCaptura (limite superior exclusivo)."
+      },
+      "response": [
+        {
+          "name": "200 OK — Ciclo expirado",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mockBaseUrl}}/api/ciclos/20252",
+              "host": ["{{mockBaseUrl}}"],
+              "path": ["api", "ciclos", "20252"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": 20252,\n  \"ativo\": true,\n  \"dataInicioCaptura\": \"2025-01-15\",\n  \"dataFimCaptura\": \"2025-07-01\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "🚫 Ciclo não encontrado (id: 99999)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{mockBaseUrl}}/api/ciclos/99999",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["api", "ciclos", "99999"]
+        },
+        "description": "O WireMock retorna HTTP 404 para o cicloId 99999.\n\nO serviço deve descartar o evento ao receber um 404 — nenhuma matrícula é buscada, salva ou publicada."
+      },
+      "response": [
+        {
+          "name": "404 Not Found",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mockBaseUrl}}/api/ciclos/99999",
+              "host": ["{{mockBaseUrl}}"],
+              "path": ["api", "ciclos", "99999"]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "header": [],
+          "body": ""
+        }
+      ]
+    },
+    {
+      "name": "🔍 Qualquer outro cicloId não mapeado",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{mockBaseUrl}}/api/ciclos/12345",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["api", "ciclos", "12345"]
+        },
+        "description": "Testa um cicloId qualquer que não possui mapeamento no WireMock.\n\nO WireMock retorna 404 por padrão para URLs sem stub cadastrado."
+      },
+      "response": []
+    },
+    {
+      "name": "🛠️ Admin — Listar todos os stubs cadastrados",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Possui stubs cadastrados', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.mappings).to.be.an('array').that.is.not.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{mockBaseUrl}}/__admin/mappings",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["__admin", "mappings"]
+        },
+        "description": "Endpoint administrativo do WireMock que lista todos os stubs atualmente registrados.\n\nÚtil para confirmar que os arquivos de mappings foram carregados corretamente na inicialização do container."
+      },
+      "response": []
+    },
+    {
+      "name": "🛠️ Admin — Health check do WireMock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('WireMock respondendo', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{mockBaseUrl}}/__admin/health",
+          "host": ["{{mockBaseUrl}}"],
+          "path": ["__admin", "health"]
+        },
+        "description": "Verifica se o servidor WireMock está em execução e respondendo na porta 8081."
+      },
+      "response": []
+    }
+  ]
+}
